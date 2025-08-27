@@ -361,3 +361,22 @@ spawn(function()
 end)
 
 updateScore()
+-- Adicione o botão X ao topo direito do container
+local closeButton = Instance.new("TextButton")
+closeButton.Parent = container
+closeButton.Size = UDim2.new(0,36,0,36)
+closeButton.Position = UDim2.new(1,-42,0,6)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255,255,255)
+closeButton.Font = Enum.Font.FredokaOne
+closeButton.TextScaled = true
+closeButton.BackgroundColor3 = Color3.fromRGB(255,42,77)
+closeButton.BorderSizePixel = 0
+Instance.new("UICorner", closeButton).CornerRadius = UDim.new(1,0)
+local cbStroke = Instance.new("UIStroke", closeButton)
+cbStroke.Color = Color3.fromRGB(255,42,77)
+cbStroke.Thickness = 2
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
