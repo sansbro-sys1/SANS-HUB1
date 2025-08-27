@@ -1,0 +1,363 @@
+--[[
+ClickFire - Roblox Lua Port
+Jogo de clique com upgrades, ocupando toda a tela.
+Coloque este script dentro de StarterGui como um LocalScript.
+--]]
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Criação da tela principal
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ClickFireGui"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+-- Container principal ocupando toda área de vista
+local container = Instance.new("Frame")
+container.Name = "Container"
+container.Parent = screenGui
+container.AnchorPoint = Vector2.new(0.5,0.5)
+container.Position = UDim2.new(0.5,0,0.5,0)
+container.Size = UDim2.new(1,0,1,0)
+container.BackgroundTransparency = 0.4
+container.BackgroundColor3 = Color3.fromRGB(30, 26, 46)
+container.BorderSizePixel = 0
+
+-- Sombra
+local uICorner = Instance.new("UICorner", container)
+uICorner.CornerRadius = UDim.new(0, 15)
+
+local uIStroke = Instance.new("UIStroke", container)
+uIStroke.Color = Color3.fromRGB(255, 42, 77)
+uIStroke.Thickness = 3
+
+-- Título
+local title = Instance.new("TextLabel")
+title.Parent = container
+title.Size = UDim2.new(1,0,0,50)
+title.Position = UDim2.new(0,0,0,0)
+title.Text = "ClickFire"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.FredokaOne
+title.TextScaled = true
+title.BackgroundTransparency = 1
+
+-- Subtítulo
+local subtitle = Instance.new("TextLabel")
+subtitle.Parent = container
+subtitle.Size = UDim2.new(1,0,0,30)
+subtitle.Position = UDim2.new(0,0,0,45)
+subtitle.Text = "Clique para ganhar pontos e compre upgrades para aumentar seu poder!"
+subtitle.TextColor3 = Color3.fromRGB(200,200,200)
+subtitle.Font = Enum.Font.FredokaOne
+subtitle.TextScaled = true
+subtitle.BackgroundTransparency = 1
+
+-- Score container
+local scoreContainer = Instance.new("Frame")
+scoreContainer.Parent = container
+scoreContainer.Size = UDim2.new(0.6,0,0,70)
+scoreContainer.Position = UDim2.new(0.2,0,0,80)
+scoreContainer.BackgroundTransparency = 0.6
+scoreContainer.BackgroundColor3 = Color3.fromRGB(138, 12, 34)
+scoreContainer.BorderSizePixel = 0
+Instance.new("UICorner", scoreContainer).CornerRadius = UDim.new(0,12)
+
+local scoreTitle = Instance.new("TextLabel")
+scoreTitle.Parent = scoreContainer
+scoreTitle.Size = UDim2.new(0.5,0,0.5,0)
+scoreTitle.Position = UDim2.new(0.25,0,0,0)
+scoreTitle.Text = "Seus Pontos"
+scoreTitle.TextColor3 = Color3.fromRGB(255,255,255)
+scoreTitle.Font = Enum.Font.FredokaOne
+scoreTitle.TextScaled = true
+scoreTitle.BackgroundTransparency = 1
+
+local scoreLabel = Instance.new("TextLabel")
+scoreLabel.Parent = scoreContainer
+scoreLabel.Size = UDim2.new(1,0,0.5,0)
+scoreLabel.Position = UDim2.new(0,0,0.5,0)
+scoreLabel.Text = "0"
+scoreLabel.TextColor3 = Color3.fromRGB(255,42,77)
+scoreLabel.Font = Enum.Font.FredokaOne
+scoreLabel.TextScaled = true
+scoreLabel.BackgroundTransparency = 1
+
+-- Botão de clique
+local clickButton = Instance.new("TextButton")
+clickButton.Parent = container
+clickButton.Size = UDim2.new(0,180,0,180)
+clickButton.Position = UDim2.new(0.5,-90,0,170)
+clickButton.Text = "CLICK!\n+1 por clique"
+clickButton.TextColor3 = Color3.fromRGB(255,255,255)
+clickButton.Font = Enum.Font.FredokaOne
+clickButton.TextScaled = true
+clickButton.BackgroundColor3 = Color3.fromRGB(255,42,77)
+clickButton.BorderSizePixel = 0
+Instance.new("UICorner", clickButton).CornerRadius = UDim.new(1,0)
+local cbStroke = Instance.new("UIStroke", clickButton)
+cbStroke.Color = Color3.fromRGB(255,42,77)
+cbStroke.Thickness = 4
+
+-- Upgrades container
+local upgradesContainer = Instance.new("Frame")
+upgradesContainer.Parent = container
+upgradesContainer.Size = UDim2.new(0.85,0,0,160)
+upgradesContainer.Position = UDim2.new(0.075,0,0,370)
+upgradesContainer.BackgroundTransparency = 1
+
+-- Upgrade templates
+local upgradeInfos = {
+    {
+        name = "Auto Clicker",
+        desc = "Ganha pontos automaticamente a cada segundo",
+        costInit = 10
+    },
+    {
+        name = "Click Duplo",
+        desc = "Dobra os pontos ganhos por clique",
+        costInit = 50
+    },
+    {
+        name = "Mega Click",
+        desc = "Adiciona pontos extras por clique",
+        costInit = 100
+    }
+}
+
+local upgradeFrames = {}
+local upgradeLevels = {0,0,0}
+local upgradeCosts = {10,50,100}
+local upgradeValues = {0,1,0}
+
+for i, info in ipairs(upgradeInfos) do
+    local upgradeFrame = Instance.new("Frame")
+    upgradeFrame.Parent = upgradesContainer
+    upgradeFrame.Size = UDim2.new(0.31,0,1,0)
+    upgradeFrame.Position = UDim2.new(0.34*(i-1),0,0,0)
+    upgradeFrame.BackgroundColor3 = Color3.fromRGB(30, 26, 46)
+    upgradeFrame.BackgroundTransparency = 0.5
+    Instance.new("UICorner", upgradeFrame).CornerRadius = UDim.new(0,12)
+    Instance.new("UIStroke", upgradeFrame).Color = Color3.fromRGB(255,42,77)
+
+    local upgradeTitle = Instance.new("TextLabel")
+    upgradeTitle.Parent = upgradeFrame
+    upgradeTitle.Size = UDim2.new(1,0,0,30)
+    upgradeTitle.Position = UDim2.new(0,0,0,0)
+    upgradeTitle.Text = info.name
+    upgradeTitle.TextColor3 = Color3.fromRGB(255,42,77)
+    upgradeTitle.Font = Enum.Font.FredokaOne
+    upgradeTitle.TextScaled = true
+    upgradeTitle.BackgroundTransparency = 1
+
+    local upgradeDesc = Instance.new("TextLabel")
+    upgradeDesc.Parent = upgradeFrame
+    upgradeDesc.Size = UDim2.new(1,0,0,20)
+    upgradeDesc.Position = UDim2.new(0,0,0,30)
+    upgradeDesc.Text = info.desc
+    upgradeDesc.TextColor3 = Color3.fromRGB(230,230,230)
+    upgradeDesc.Font = Enum.Font.FredokaOne
+    upgradeDesc.TextScaled = true
+    upgradeDesc.BackgroundTransparency = 1
+
+    local upgradeInfo = Instance.new("TextLabel")
+    upgradeInfo.Parent = upgradeFrame
+    upgradeInfo.Size = UDim2.new(1,0,0,20)
+    upgradeInfo.Position = UDim2.new(0,0,0,50)
+    upgradeInfo.Text = ""
+    upgradeInfo.TextColor3 = Color3.fromRGB(200,200,200)
+    upgradeInfo.Font = Enum.Font.Code
+    upgradeInfo.TextScaled = true
+    upgradeInfo.BackgroundTransparency = 1
+
+    local costInfo = Instance.new("TextLabel")
+    costInfo.Parent = upgradeFrame
+    costInfo.Size = UDim2.new(1,0,0,20)
+    costInfo.Position = UDim2.new(0,0,0,70)
+    costInfo.Text = ""
+    costInfo.TextColor3 = Color3.fromRGB(200,200,200)
+    costInfo.Font = Enum.Font.Code
+    costInfo.TextScaled = true
+    costInfo.BackgroundTransparency = 1
+
+    local buyButton = Instance.new("TextButton")
+    buyButton.Parent = upgradeFrame
+    buyButton.Size = UDim2.new(0.8,0,0,30)
+    buyButton.Position = UDim2.new(0.1,0,0,100)
+    buyButton.Text = "Comprar"
+    buyButton.TextColor3 = Color3.fromRGB(255,255,255)
+    buyButton.Font = Enum.Font.FredokaOne
+    buyButton.TextScaled = true
+    buyButton.BackgroundColor3 = Color3.fromRGB(255,42,77)
+    buyButton.BorderSizePixel = 0
+    Instance.new("UICorner", buyButton).CornerRadius = UDim.new(0,6)
+
+    upgradeFrames[i] = {
+        frame = upgradeFrame,
+        info = upgradeInfo,
+        costInfo = costInfo,
+        buyButton = buyButton
+    }
+end
+
+-- Stats
+local statsFrame = Instance.new("Frame")
+statsFrame.Parent = container
+statsFrame.Size = UDim2.new(0.8,0,0,70)
+statsFrame.Position = UDim2.new(0.1,0,0,540)
+statsFrame.BackgroundTransparency = 0.6
+statsFrame.BackgroundColor3 = Color3.fromRGB(138,12,34)
+Instance.new("UICorner", statsFrame).CornerRadius = UDim.new(0,12)
+
+local statsLabels = {}
+
+for i, stat in ipairs({"Pontos por clique", "Pontos por segundo", "Total de cliques", "Total de upgrades"}) do
+    local statLabel = Instance.new("TextLabel")
+    statLabel.Parent = statsFrame
+    statLabel.Size = UDim2.new(0.25,0,1,0)
+    statLabel.Position = UDim2.new(0.25*(i-1),0,0,0)
+    statLabel.Text = stat..": 0"
+    statLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    statLabel.Font = Enum.Font.FredokaOne
+    statLabel.TextScaled = true
+    statLabel.BackgroundTransparency = 1
+    statsLabels[i] = statLabel
+end
+
+-- Variáveis do jogo
+local score = 0
+local pointsPerClick = 1
+local pointsPerSecond = 0
+local totalClicks = 0
+local totalUpgrades = 0
+
+local autoClickerLevel = 0
+local doubleClickLevel = 0
+local megaClickLevel = 0
+
+-- Funções de custo dos upgrades
+local function getAutoClickerCost()
+    return math.floor(10 * (1.8 ^ autoClickerLevel))
+end
+
+local function getDoubleClickCost()
+    return math.floor(50 * (1.8 ^ doubleClickLevel))
+end
+
+local function getMegaClickCost()
+    return math.floor(100 * (1.8 ^ megaClickLevel))
+end
+
+-- Função para atualizar a pontuação na tela
+local function updateScore()
+    scoreLabel.Text = tostring(score)
+    statsLabels[1].Text = "Pontos por clique: "..pointsPerClick
+    statsLabels[2].Text = "Pontos por segundo: "..pointsPerSecond
+    statsLabels[3].Text = "Total de cliques: "..totalClicks
+    statsLabels[4].Text = "Total de upgrades: "..totalUpgrades
+    clickButton.Text = "CLICK!\n+"..pointsPerClick.." por clique"
+
+    -- Upgrades info
+    upgradeFrames[1].info.Text = "Nível: "..autoClickerLevel.."  +"..autoClickerLevel.."/s"
+    upgradeFrames[1].costInfo.Text = "Próximo custo: "..getAutoClickerCost().." pontos"
+    upgradeFrames[1].buyButton.AutoButtonColor = score >= getAutoClickerCost()
+
+    upgradeFrames[2].info.Text = "Nível: "..doubleClickLevel.."  +"..pointsPerClick.."/clique"
+    upgradeFrames[2].costInfo.Text = "Próximo custo: "..getDoubleClickCost().." pontos"
+    upgradeFrames[2].buyButton.AutoButtonColor = score >= getDoubleClickCost()
+
+    upgradeFrames[3].info.Text = "Nível: "..megaClickLevel.."  +"..(megaClickLevel*10).."/clique"
+    upgradeFrames[3].costInfo.Text = "Próximo custo: "..getMegaClickCost().." pontos"
+    upgradeFrames[3].buyButton.AutoButtonColor = score >= getMegaClickCost()
+end
+
+-- Efeito visual de partículas (simulado com Tween)
+local TweenService = game:GetService("TweenService")
+local function createParticles(x, y)
+    for i = 1, 10 do
+        local particle = Instance.new("Frame")
+        particle.Size = UDim2.new(0, math.random(5,15), 0, math.random(5,15))
+        particle.Position = clickButton.Position + UDim2.new(0.5,0,0.5,0)
+        particle.BackgroundColor3 = Color3.fromRGB(255,42,77)
+        particle.BackgroundTransparency = 0.3
+        particle.BorderSizePixel = 0
+        particle.Parent = container
+        Instance.new("UICorner", particle).CornerRadius = UDim.new(1,0)
+
+        local angle = math.random() * math.pi * 2
+        local distance = math.random(50,150)
+        local xOffset = math.cos(angle) * distance
+        local yOffset = math.sin(angle) * distance
+
+        local tween = TweenService:Create(
+            particle,
+            TweenInfo.new(math.random(5,10)/10, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {
+                Position = particle.Position + UDim2.new(0, xOffset, 0, yOffset),
+                BackgroundTransparency = 1
+            }
+        )
+        tween:Play()
+        game:GetService("Debris"):AddItem(particle,1)
+    end
+end
+
+-- Função de clique principal
+clickButton.MouseButton1Click:Connect(function()
+    score = score + pointsPerClick
+    totalClicks = totalClicks + 1
+    updateScore()
+    createParticles()
+    clickButton.Size = UDim2.new(0,170,0,170)
+    wait(0.1)
+    clickButton.Size = UDim2.new(0,180,0,180)
+end)
+
+-- Compra de upgrades
+upgradeFrames[1].buyButton.MouseButton1Click:Connect(function()
+    local cost = getAutoClickerCost()
+    if score >= cost then
+        score = score - cost
+        autoClickerLevel = autoClickerLevel + 1
+        pointsPerSecond = autoClickerLevel
+        totalUpgrades = totalUpgrades + 1
+        updateScore()
+    end
+end)
+
+upgradeFrames[2].buyButton.MouseButton1Click:Connect(function()
+    local cost = getDoubleClickCost()
+    if score >= cost then
+        score = score - cost
+        doubleClickLevel = doubleClickLevel + 1
+        pointsPerClick = 1 * (2 ^ doubleClickLevel) + megaClickLevel * 10
+        totalUpgrades = totalUpgrades + 1
+        updateScore()
+    end
+end)
+
+upgradeFrames[3].buyButton.MouseButton1Click:Connect(function()
+    local cost = getMegaClickCost()
+    if score >= cost then
+        score = score - cost
+        megaClickLevel = megaClickLevel + 1
+        pointsPerClick = 1 * (2 ^ doubleClickLevel) + megaClickLevel * 10
+        totalUpgrades = totalUpgrades + 1
+        updateScore()
+    end
+end)
+
+-- Sistema de ganho automático de pontos
+spawn(function()
+    while true do
+        wait(1)
+        if pointsPerSecond > 0 then
+            score = score + pointsPerSecond
+            updateScore()
+        end
+    end
+end)
+
+updateScore()
