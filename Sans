@@ -1,20 +1,19 @@
 --[[
-ClickFire - Roblox Lua Port
+ClickFire - Roblox Lua Adaptável
 Jogo de clique com upgrades, ocupando toda a tela.
-Coloque este script dentro de StarterGui como um LocalScript.
+Adapta a interface e mostra mensagem de acordo com o dispositivo do jogador.
+Coloque este script como LocalScript em StarterGui.
 --]]
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Criação da tela principal
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ClickFireGui"
 screenGui.Parent = playerGui
 screenGui.ResetOnSpawn = false
 
--- Container principal ocupando toda área de vista
 local container = Instance.new("Frame")
 container.Name = "Container"
 container.Parent = screenGui
@@ -24,20 +23,63 @@ container.Size = UDim2.new(1,0,1,0)
 container.BackgroundTransparency = 0.4
 container.BackgroundColor3 = Color3.fromRGB(30, 26, 46)
 container.BorderSizePixel = 0
+Instance.new("UICorner", container).CornerRadius = UDim.new(0, 15)
+Instance.new("UIStroke", container).Color = Color3.fromRGB(255, 42, 77)
 
--- Sombra
-local uICorner = Instance.new("UICorner", container)
-uICorner.CornerRadius = UDim.new(0, 15)
+-- Botão X
+local closeButton = Instance.new("TextButton")
+closeButton.Parent = container
+closeButton.Size = UDim2.new(0,36,0,36)
+closeButton.Position = UDim2.new(1,-42,0,6)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255,255,255)
+closeButton.Font = Enum.Font.FredokaOne
+closeButton.TextScaled = true
+closeButton.BackgroundColor3 = Color3.fromRGB(255,42,77)
+closeButton.BorderSizePixel = 0
+Instance.new("UICorner", closeButton).CornerRadius = UDim.new(1,0)
+local cbStroke = Instance.new("UIStroke", closeButton)
+cbStroke.Color = Color3.fromRGB(255,42,77)
+cbStroke.Thickness = 2
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
 
-local uIStroke = Instance.new("UIStroke", container)
-uIStroke.Color = Color3.fromRGB(255, 42, 77)
-uIStroke.Thickness = 3
+-- Mensagem de adaptação de UI
+local adaptMessage = Instance.new("TextLabel")
+adaptMessage.Parent = container
+adaptMessage.Size = UDim2.new(0.85,0,0,40)
+adaptMessage.Position = UDim2.new(0.075,0,0,50)
+adaptMessage.TextColor3 = Color3.fromRGB(255,255,255)
+adaptMessage.Font = Enum.Font.FredokaOne
+adaptMessage.TextScaled = true
+adaptMessage.BackgroundTransparency = 0.5
+adaptMessage.BackgroundColor3 = Color3.fromRGB(255,42,77)
+Instance.new("UICorner", adaptMessage).CornerRadius = UDim.new(0,12)
+adaptMessage.ZIndex = 10
+
+local function getDeviceMessage()
+    local vp = workspace.CurrentCamera.ViewportSize
+    if vp.X < 600 then
+        return "Modo Celular: Interface otimizada para telas pequenas!"
+    elseif vp.X < 1000 then
+        return "Modo Tablet: Interface adaptada para média tela!"
+    else
+        return "Modo PC: Interface completa para desktop!"
+    end
+end
+adaptMessage.Text = getDeviceMessage()
+
+-- Se o jogador redimensionar, atualiza a mensagem
+workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+    adaptMessage.Text = getDeviceMessage()
+end)
 
 -- Título
 local title = Instance.new("TextLabel")
 title.Parent = container
 title.Size = UDim2.new(1,0,0,50)
-title.Position = UDim2.new(0,0,0,0)
+title.Position = UDim2.new(0,0,0,100)
 title.Text = "ClickFire"
 title.TextColor3 = Color3.fromRGB(255,255,255)
 title.Font = Enum.Font.FredokaOne
@@ -48,7 +90,7 @@ title.BackgroundTransparency = 1
 local subtitle = Instance.new("TextLabel")
 subtitle.Parent = container
 subtitle.Size = UDim2.new(1,0,0,30)
-subtitle.Position = UDim2.new(0,0,0,45)
+subtitle.Position = UDim2.new(0,0,0,145)
 subtitle.Text = "Clique para ganhar pontos e compre upgrades para aumentar seu poder!"
 subtitle.TextColor3 = Color3.fromRGB(200,200,200)
 subtitle.Font = Enum.Font.FredokaOne
@@ -59,7 +101,7 @@ subtitle.BackgroundTransparency = 1
 local scoreContainer = Instance.new("Frame")
 scoreContainer.Parent = container
 scoreContainer.Size = UDim2.new(0.6,0,0,70)
-scoreContainer.Position = UDim2.new(0.2,0,0,80)
+scoreContainer.Position = UDim2.new(0.2,0,0,180)
 scoreContainer.BackgroundTransparency = 0.6
 scoreContainer.BackgroundColor3 = Color3.fromRGB(138, 12, 34)
 scoreContainer.BorderSizePixel = 0
@@ -89,7 +131,7 @@ scoreLabel.BackgroundTransparency = 1
 local clickButton = Instance.new("TextButton")
 clickButton.Parent = container
 clickButton.Size = UDim2.new(0,180,0,180)
-clickButton.Position = UDim2.new(0.5,-90,0,170)
+clickButton.Position = UDim2.new(0.5,-90,0,270)
 clickButton.Text = "CLICK!\n+1 por clique"
 clickButton.TextColor3 = Color3.fromRGB(255,255,255)
 clickButton.Font = Enum.Font.FredokaOne
@@ -97,18 +139,17 @@ clickButton.TextScaled = true
 clickButton.BackgroundColor3 = Color3.fromRGB(255,42,77)
 clickButton.BorderSizePixel = 0
 Instance.new("UICorner", clickButton).CornerRadius = UDim.new(1,0)
-local cbStroke = Instance.new("UIStroke", clickButton)
-cbStroke.Color = Color3.fromRGB(255,42,77)
-cbStroke.Thickness = 4
+local cbStroke2 = Instance.new("UIStroke", clickButton)
+cbStroke2.Color = Color3.fromRGB(255,42,77)
+cbStroke2.Thickness = 4
 
 -- Upgrades container
 local upgradesContainer = Instance.new("Frame")
 upgradesContainer.Parent = container
 upgradesContainer.Size = UDim2.new(0.85,0,0,160)
-upgradesContainer.Position = UDim2.new(0.075,0,0,370)
+upgradesContainer.Position = UDim2.new(0.075,0,0,470)
 upgradesContainer.BackgroundTransparency = 1
 
--- Upgrade templates
 local upgradeInfos = {
     {
         name = "Auto Clicker",
@@ -206,7 +247,7 @@ end
 local statsFrame = Instance.new("Frame")
 statsFrame.Parent = container
 statsFrame.Size = UDim2.new(0.8,0,0,70)
-statsFrame.Position = UDim2.new(0.1,0,0,540)
+statsFrame.Position = UDim2.new(0.1,0,0,640)
 statsFrame.BackgroundTransparency = 0.6
 statsFrame.BackgroundColor3 = Color3.fromRGB(138,12,34)
 Instance.new("UICorner", statsFrame).CornerRadius = UDim.new(0,12)
@@ -237,7 +278,6 @@ local autoClickerLevel = 0
 local doubleClickLevel = 0
 local megaClickLevel = 0
 
--- Funções de custo dos upgrades
 local function getAutoClickerCost()
     return math.floor(10 * (1.8 ^ autoClickerLevel))
 end
@@ -250,7 +290,6 @@ local function getMegaClickCost()
     return math.floor(100 * (1.8 ^ megaClickLevel))
 end
 
--- Função para atualizar a pontuação na tela
 local function updateScore()
     scoreLabel.Text = tostring(score)
     statsLabels[1].Text = "Pontos por clique: "..pointsPerClick
@@ -259,7 +298,6 @@ local function updateScore()
     statsLabels[4].Text = "Total de upgrades: "..totalUpgrades
     clickButton.Text = "CLICK!\n+"..pointsPerClick.." por clique"
 
-    -- Upgrades info
     upgradeFrames[1].info.Text = "Nível: "..autoClickerLevel.."  +"..autoClickerLevel.."/s"
     upgradeFrames[1].costInfo.Text = "Próximo custo: "..getAutoClickerCost().." pontos"
     upgradeFrames[1].buyButton.AutoButtonColor = score >= getAutoClickerCost()
@@ -273,9 +311,8 @@ local function updateScore()
     upgradeFrames[3].buyButton.AutoButtonColor = score >= getMegaClickCost()
 end
 
--- Efeito visual de partículas (simulado com Tween)
 local TweenService = game:GetService("TweenService")
-local function createParticles(x, y)
+local function createParticles()
     for i = 1, 10 do
         local particle = Instance.new("Frame")
         particle.Size = UDim2.new(0, math.random(5,15), 0, math.random(5,15))
@@ -304,7 +341,6 @@ local function createParticles(x, y)
     end
 end
 
--- Função de clique principal
 clickButton.MouseButton1Click:Connect(function()
     score = score + pointsPerClick
     totalClicks = totalClicks + 1
@@ -315,7 +351,6 @@ clickButton.MouseButton1Click:Connect(function()
     clickButton.Size = UDim2.new(0,180,0,180)
 end)
 
--- Compra de upgrades
 upgradeFrames[1].buyButton.MouseButton1Click:Connect(function()
     local cost = getAutoClickerCost()
     if score >= cost then
@@ -349,7 +384,6 @@ upgradeFrames[3].buyButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Sistema de ganho automático de pontos
 spawn(function()
     while true do
         wait(1)
@@ -361,22 +395,3 @@ spawn(function()
 end)
 
 updateScore()
--- Adicione o botão X ao topo direito do container
-local closeButton = Instance.new("TextButton")
-closeButton.Parent = container
-closeButton.Size = UDim2.new(0,36,0,36)
-closeButton.Position = UDim2.new(1,-42,0,6)
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255,255,255)
-closeButton.Font = Enum.Font.FredokaOne
-closeButton.TextScaled = true
-closeButton.BackgroundColor3 = Color3.fromRGB(255,42,77)
-closeButton.BorderSizePixel = 0
-Instance.new("UICorner", closeButton).CornerRadius = UDim.new(1,0)
-local cbStroke = Instance.new("UIStroke", closeButton)
-cbStroke.Color = Color3.fromRGB(255,42,77)
-cbStroke.Thickness = 2
-
-closeButton.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-end)
